@@ -1,0 +1,14 @@
+__pycache__
+venv
+.env
+
+# build
+django_easy_email.egg-info
+dist
+build
+
+# sqlite db
+db.sqlite3
+
+# other markdown files
+note.md
