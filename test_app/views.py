@@ -1,7 +1,6 @@
 from django.views import View
 from django.http import HttpResponse
-
-from easy_email.utils import EmailProcessor
+from easy_email.processor import EmailProcessor
 
 
 class SendEmailAPIView(View):

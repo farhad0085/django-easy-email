@@ -39,7 +39,7 @@ class Email(models.Model):
 
 
 class Template(models.Model):
-    name = models.CharField(max_length=50, validators=[TemplateNameValidator()],
+    name = models.CharField(max_length=50, validators=[TemplateNameValidator()], unique=True,
         help_text="Only underscore (_), lowercase characters, and numbers are allowed. Name cannot start with a number.")
     content = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
