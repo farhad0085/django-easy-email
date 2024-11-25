@@ -1,7 +1,7 @@
 import os
-
 from easy_email.enums import EmailStatus
-from . import settings
+from easy_email.validators import TemplateNameValidator
+from easy_email import settings
 from django.db import models
 
 
@@ -35,4 +35,12 @@ class Email(models.Model):
     status = models.IntegerField(choices=EMAIL_STATUS, null=True, blank=True)
     logs = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
+
+class Template(models.Model):
+    name = models.CharField(max_length=50, validators=[TemplateNameValidator()],
+        help_text="Only underscore (_), lowercase characters, and numbers are allowed. Name cannot start with a number.")
+    content = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
