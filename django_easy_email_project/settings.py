@@ -88,4 +88,5 @@ STATIC_URL = '/static/'
 MEDIA_ROOT = 'mediafiles'
 MEDIA_URL = '/mediafiles/'
 
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 # EASY_EMAIL_ATTACHMENT_UPLOAD_PATH = 'email/something-else'

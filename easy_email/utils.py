@@ -4,6 +4,7 @@ import traceback
 from django.utils import timezone
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives, get_connection
+from easy_email.enums import EmailStatus
 from easy_email.models import Attachment, Email
 
 
@@ -51,10 +52,12 @@ class BaseEmailProcessor:
 
             # update email status
             email_obj.is_sent = True
+            email_obj.status = EmailStatus.SUCCESS
             email_obj.save()
         except Exception as e:
             email_obj.is_sent = False
-            email_obj.log = "".join(traceback.format_exception(None, e, e.__traceback__))
+            email_obj.status = EmailStatus.ERROR
+            email_obj.logs = "".join(traceback.format_exception(None, e, e.__traceback__))
             email_obj.save()
 
 
