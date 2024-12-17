@@ -1,6 +1,7 @@
 from django.views import View
 from django.http import HttpResponse
 from easy_email.processor import EmailProcessor
+from easy_email.utils import render_email_template
 
 
 class SendEmailAPIView(View):
@@ -9,6 +10,9 @@ class SendEmailAPIView(View):
         content = """
         <h2>Email sent</h2>
         """
+
+        email_body = render_email_template('event_approval_email', {})
+        print(email_body)
 
         EmailProcessor(
             subject="Test email subject",
