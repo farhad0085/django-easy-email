@@ -25,7 +25,7 @@ setup(
     ],
     packages=["easy_email", "easy_email/migrations"],
     include_package_data=True,
-    install_requires=["django>=2.2"],
+    install_requires=["django>=2.2", "filetype>=1.2.0"],
 )
 
 # build
