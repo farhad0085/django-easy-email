@@ -92,11 +92,9 @@ class BaseEmailProcessor:
             msg.send(self.fail_silently)
 
             # update email status
-            email_obj.is_sent = True
             email_obj.status = EmailStatus.SUCCESS
             email_obj.save()
         except Exception as e:
-            email_obj.is_sent = False
             email_obj.status = EmailStatus.ERROR
             email_obj.logs = "".join(traceback.format_exception(None, e, e.__traceback__))
             email_obj.save()

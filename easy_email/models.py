@@ -20,6 +20,7 @@ class Email(models.Model):
     """
 
     EMAIL_STATUS = [
+        [EmailStatus.PENDING, "Pending"],
         [EmailStatus.SUCCESS, "Success"],
         [EmailStatus.ERROR, "Error"],
     ]
@@ -31,8 +32,7 @@ class Email(models.Model):
     cc = models.TextField(null=True, blank=True)
     attachments = models.ManyToManyField(Attachment, blank=True)
     send_time = models.DateTimeField(null=True, blank=True)
-    is_sent = models.BooleanField(default=False)
-    status = models.IntegerField(choices=EMAIL_STATUS, null=True, blank=True)
+    status = models.IntegerField(choices=EMAIL_STATUS, default=EmailStatus.PENDING, null=True, blank=True)
     logs = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)

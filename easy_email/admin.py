@@ -12,7 +12,7 @@ class AttachmentAdmin(admin.ModelAdmin):
 class EmailAdmin(admin.ModelAdmin):
     list_display = [
         "id", "subject", "recipients", "send_time",
-        "is_sent", "status", "created_at"
+        "status", "created_at"
     ]
     search_fields = ["subject", "recipients"]
     list_display_links = ["id", "subject"]
