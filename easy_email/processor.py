@@ -135,6 +135,9 @@ class BaseEmailProcessor:
         return email_obj
 
 
-class EmailProcessor(BaseEmailProcessor):
+class DefaultEmailProcessor(BaseEmailProcessor):
     pass
 
+
+class RedisEmailProcessor(BaseEmailProcessor):
+    pass
