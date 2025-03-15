@@ -7,6 +7,7 @@ from easy_email.utils import render_email_template
 class SendEmailAPIView(View):
 
     def get(self, request):
+        # add two button (one for instant send, another for schedule)
         content = """
         <h2>Email sent</h2>
         """

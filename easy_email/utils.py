@@ -7,7 +7,7 @@ def render_email_template(template_name, context=None, request=None):
     try:
         template = Template.objects.get(name=template_name)
     except:
-        raise TemplateNotFound(f"Template `{template_name}` doesn't exist, please re-check the template_name.")
+        raise TemplateNotFound(template_name)
     
     template_engine = TemplateEngine(template_string=template.content)
     context = Context({'request': request, **context })

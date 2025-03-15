@@ -2,34 +2,75 @@ import os
 import filetype
 import traceback
 from django.utils import timezone
+from datetime import timedelta
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives, get_connection
 from easy_email.enums import EmailStatus
+from easy_email.exceptions import InvalidSendTime
 from easy_email.models import Attachment, Email
-
+from typing import Optional, Union
 
 class BaseEmailProcessor:
-    def __init__(self, subject, email_body, recipient_list, from_email=None, fail_silently=True, **kwargs):
+    def __init__(self, subject, email_body, recipient_list,
+            from_email=None, fail_silently=True, **kwargs):
         self.subject = subject
         self.recipient_list = recipient_list
         self.from_email = from_email
         self.fail_silently = fail_silently
         self.message = email_body
         self.html_message = email_body
+        self.send_time = None
         self.kwargs = kwargs
-        self.process_email()
     
     def get_connection(self):
         connection_data = self.get_connection_data()
         return get_connection(**connection_data)
+    
+    def send(self, send_time: Optional[Union[None, timezone.datetime, int]]=None):
+        """
+        Arguments:
+        - send_time (Optional[Union[None, datetime, int]]): Determines when to send the email.
+            - None: Sends the email instantly.
+            - datetime: Sends the email at the specified future datetime.
+            - int: Sends the email after the specified number of seconds (delay).
+            
+        If the datetime is in the past, the function will raise an error. If an integer is provided, it will be interpreted as a delay in seconds, and the email will be sent after that duration.
+        """
 
-    def process_email(self):
+        current_time = timezone.now()  # Get the current time with timezone info
+
+        # If send_time is None, send the email instantly
+        if send_time is None:
+            self.send_time = current_time
+            self._process_email()
+        
+        # If send_time is a datetime, check if it's in the future
+        elif isinstance(send_time, timezone.datetime):
+            if send_time > current_time:
+                # If the send time is in the future, process the email
+                self.send_time = send_time
+                self._process_email()
+            else:
+                # Raise an exception if the send time is in the past
+                raise InvalidSendTime(send_time)
+        
+        # If send_time is an integer (in seconds), schedule the email after that delay
+        elif isinstance(send_time, int):
+            # Schedule the email by adding seconds to the current time
+            self.send_time = current_time + timedelta(seconds=send_time)
+            self._process_email()
+
+        else:
+            # Raise an exception for invalid send_time type
+            raise InvalidSendTime(send_time)
+
+    def _process_email(self):
         connection = self.get_connection()
 
         # pop files first, files is a list of file objects
         attachment_files = self.kwargs.pop("files", []) or []
 
-        email_obj = self.save_record(attachments=attachment_files)
+        email_obj = self._save_email(attachments=attachment_files)
         
         try:
             msg = EmailMultiAlternatives(
@@ -74,7 +115,7 @@ class BaseEmailProcessor:
     def get_default_from_email(self):
         return settings.DEFAULT_FROM_EMAIL
 
-    def save_record(self, attachments):
+    def _save_email(self, attachments):
         # save the mail
         attachment_objs = []
         for file in attachments:
@@ -88,7 +129,7 @@ class BaseEmailProcessor:
             cc=self.kwargs.get('cc'),
         )
         
-        email_obj.send_time = timezone.now()
+        email_obj.send_time = self.send_time
         email_obj.attachments.set(attachment_objs)
         email_obj.save()
         return email_obj
