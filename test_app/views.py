@@ -16,7 +16,7 @@ class SendEmailAPIView(View):
         action = request.POST.get('action')
         subject = request.POST.get('subject')
         body = request.POST.get('body')
-        # email_body = render_email_template('event_approval_email', {})
+        # email_body = render_email_template('test_extended', {})
         # Get the recipients from the form
         recipients = request.POST.get('recipient', '').split(',')
         recipients = [email.strip() for email in recipients]
