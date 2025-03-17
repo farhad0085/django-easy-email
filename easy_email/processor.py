@@ -1,12 +1,13 @@
 import filetype
 import traceback
+from celery import shared_task
 from typing import List
 from django.utils import timezone
 from datetime import timedelta
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives, get_connection
 from easy_email.enums import EmailStatus
-from easy_email.exceptions import InvalidFileFormat, InvalidSendTime
+from easy_email.exceptions import InvalidEmailProcessor, InvalidFileFormat, InvalidSendTime
 from easy_email.models import Attachment, Email
 from typing import Optional, Union
 
@@ -49,6 +50,9 @@ class BaseEmailProcessor:
         connection_data = self.get_connection_data()
         return get_connection(**connection_data)
     
+    def get_send_time(self, raw_send_time=None):
+        raise NotImplementedError("subclass must implement this method: `get_send_time`")
+    
     def send(self, send_time: Optional[Union[None, timezone.datetime, int]]=None):
         """
         Arguments:
@@ -59,33 +63,7 @@ class BaseEmailProcessor:
             
         If the datetime is in the past, the function will raise an error. If an integer is provided, it will be interpreted as a delay in seconds, and the email will be sent after that duration.
         """
-
-        current_time = timezone.now()  # Get the current time with timezone info
-
-        # If send_time is None, send the email instantly
-        if send_time is None:
-            self.send_time = current_time
-            self._process_email()
-        
-        # If send_time is a datetime, check if it's in the future
-        elif isinstance(send_time, timezone.datetime):
-            if send_time > current_time:
-                # If the send time is in the future, process the email
-                self.send_time = send_time
-                self._process_email()
-            else:
-                # Raise an exception if the send time is in the past
-                raise InvalidSendTime(send_time)
-        
-        # If send_time is an integer (in seconds), schedule the email after that delay
-        elif isinstance(send_time, int):
-            # Schedule the email by adding seconds to the current time
-            self.send_time = current_time + timedelta(seconds=send_time)
-            self._process_email()
-
-        else:
-            # Raise an exception for invalid send_time type
-            raise InvalidSendTime(send_time)
+        self._process_email(send_time)
 
     def _process_files(self) -> List[Attachment]:
         """
@@ -116,11 +94,11 @@ class BaseEmailProcessor:
         # Return the list of valid Attachment objects
         return attachments
 
-    def _process_email(self):
+    def _process_email(self, send_time):
         connection = self.get_connection()
 
         attachments = self._process_files()
-        email_obj = self._save_email()
+        email_obj = self._save_email(send_time)
         
         try:
             msg = EmailMultiAlternatives(
@@ -149,7 +127,6 @@ class BaseEmailProcessor:
             email_obj.logs = "".join(traceback.format_exception(None, e, e.__traceback__))
             email_obj.save()
 
-
     def get_connection_data(self):
         connection_data = {
             "host": settings.EMAIL_HOST,
@@ -163,7 +140,7 @@ class BaseEmailProcessor:
     def get_default_from_email(self):
         return settings.DEFAULT_FROM_EMAIL
 
-    def _save_email(self):
+    def _save_email(self, send_time):
         attachment_objs = self._process_files()
         email_obj = Email.objects.create(
             subject=self.subject,
@@ -173,15 +150,44 @@ class BaseEmailProcessor:
             cc=self.kwargs.get('cc'),
         )
         
-        email_obj.send_time = self.send_time
+        email_obj.send_time = self.get_send_time(send_time)
         email_obj.attachments.set(attachment_objs)
         email_obj.save()
         return email_obj
 
 
 class DefaultEmailProcessor(BaseEmailProcessor):
-    pass
+    
+    def get_send_time(self, raw_send_time=None):
+        if raw_send_time:
+            raise InvalidEmailProcessor("`DefaultEmailProcessor` doesn't support email scheduling, \
+                please use `CeleryEmailProcessor` instead.")
+        return timezone.now()
 
 
 class CeleryEmailProcessor(BaseEmailProcessor):
-    pass
+
+    def get_send_time(self, raw_send_time=None):
+        if not raw_send_time:
+            raise InvalidEmailProcessor("If you don't want to schedule the email, \
+                please use `DefaultEmailProcessor` instead.")
+        
+        current_time = timezone.now()  # Get the current time with timezone info
+        
+        # If raw_send_time is a datetime, check if it's in the future
+        if isinstance(raw_send_time, timezone.datetime):
+            if raw_send_time > current_time:
+                # If the send time is in the future, process the email
+                return raw_send_time
+            else:
+                # Raise an exception if the send time is in the past
+                raise InvalidSendTime(f"The specified datetime '{raw_send_time}' is in the past")
+        
+        # If raw_send_time is an integer (in seconds), schedule the email after that delay
+        elif isinstance(raw_send_time, int):
+            # Schedule the email by adding seconds to the current time
+            return current_time + timedelta(seconds=raw_send_time)
+
+        else:
+            # Raise an exception for invalid send_time type
+            raise InvalidSendTime()

@@ -19,10 +19,8 @@ class TemplateNotFound(BaseException):
 class InvalidSendTime(BaseException):
     """Raised when the specified send time is in the past."""
     
-    def __init__(self, datetime_value=None):
-        try:
-            msg = f"The specified datetime '{datetime_value}' is in the past" if datetime_value else "The specified send time is invalid"
-        except:
+    def __init__(self, msg=None):
+        if not msg:
             msg = "The specified send time is invalid"
         super().__init__(msg)
 
@@ -34,3 +32,7 @@ class InvalidFileFormat(BaseException):
         if not msg:
             msg = "Invalid file format"
         super().__init__(msg)
+
+
+class InvalidEmailProcessor(BaseException):
+    """raises when user use a wrong email processor"""
