@@ -23,9 +23,18 @@ setup(
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
     ],
-    packages=["easy_email", "easy_email/migrations"],
+    packages=[
+        "easy_email",
+        "easy_email/migrations",
+        "easy_email/loaders",
+        "easy_email/backends",
+    ],
     include_package_data=True,
-    install_requires=["django>=3.2", "filetype>=1.2.0"],
+    install_requires=[
+        "django>=3.2",
+        "filetype>=1.2.0",
+        "celery>=5.2.2"
+    ],
 )
 
 # build

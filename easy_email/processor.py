@@ -183,5 +183,5 @@ class DefaultEmailProcessor(BaseEmailProcessor):
     pass
 
 
-class RedisEmailProcessor(BaseEmailProcessor):
+class CeleryEmailProcessor(BaseEmailProcessor):
     pass

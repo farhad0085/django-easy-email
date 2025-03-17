@@ -95,3 +95,9 @@ MEDIA_URL = '/mediafiles/'
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 # EASY_EMAIL_ATTACHMENT_UPLOAD_PATH = 'email/something-else'
+
+# CELERY
+CELERY_BROKER_URL = "redis://localhost:6379"
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
