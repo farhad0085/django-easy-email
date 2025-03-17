@@ -13,6 +13,9 @@ def upload_to(instance, filename):
 class Attachment(models.Model):
     file = models.FileField(upload_to=upload_to, max_length=500, null=True)
 
+    def __str__(self):
+        return self.file or f"File ID - {self.id}"
+
 
 class Email(models.Model):
     """
@@ -37,6 +40,9 @@ class Email(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
+    def __str__(self):
+        return self.subject or f"Email ID - {self.id}"
+
 
 class Template(models.Model):
     name = models.CharField(max_length=50, validators=[TemplateNameValidator()], unique=True,
@@ -44,3 +50,6 @@ class Template(models.Model):
     content = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+
+    def __str__(self):
+        return self.name or f"Template ID - {self.id}"
