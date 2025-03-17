@@ -15,7 +15,9 @@ def storage_backend():
 
 class Attachment(models.Model):
     file = models.FileField(upload_to=upload_to, max_length=500, null=True, storage=storage_backend)
-
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+    
     def __str__(self):
         return self.file.name if self.file else f"File ID - {self.id}"
 

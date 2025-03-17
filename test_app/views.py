@@ -2,6 +2,7 @@ from django.views import View
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
+from easy_email.models import Attachment
 from easy_email.processor import DefaultEmailProcessor
 from easy_email.utils import render_email_template
 
@@ -16,7 +17,8 @@ class SendEmailAPIView(View):
         action = request.POST.get('action')
         subject = request.POST.get('subject')
         body = request.POST.get('body')
-        body = render_email_template('test_extended2', {})
+        body = render_email_template('test', {})
+        files = Attachment.objects.all()
         # Get the recipients from the form
         recipients = request.POST.get('recipient', '').split(',')
         recipients = [email.strip() for email in recipients]
@@ -27,6 +29,7 @@ class SendEmailAPIView(View):
                 subject=subject,
                 email_body=body,
                 recipient_list=recipients,
+                files=files
             )
             email.send()
             return JsonResponse({'message': 'Email sent instantly!'})

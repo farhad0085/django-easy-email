@@ -25,3 +25,12 @@ class InvalidSendTime(BaseException):
         except:
             msg = "The specified send time is invalid"
         super().__init__(msg)
+
+
+class InvalidFileFormat(BaseException):
+    """Raised when the specified send time is in the past."""
+    
+    def __init__(self, msg=None):
+        if not msg:
+            msg = "Invalid file format"
+        super().__init__(msg)

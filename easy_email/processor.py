@@ -1,18 +1,41 @@
-import os
 import filetype
 import traceback
+from typing import List
 from django.utils import timezone
 from datetime import timedelta
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives, get_connection
 from easy_email.enums import EmailStatus
-from easy_email.exceptions import InvalidSendTime
+from easy_email.exceptions import InvalidFileFormat, InvalidSendTime
 from easy_email.models import Attachment, Email
 from typing import Optional, Union
+
 
 class BaseEmailProcessor:
     def __init__(self, subject, email_body, recipient_list,
             from_email=None, fail_silently=True, **kwargs):
+        """
+        Initializes the email processor with the given email details and optional parameters.
+
+        Args:
+        - subject (str): The subject of the email.
+        - email_body (str): The body content of the email (plain text).
+        - recipient_list (list): A list of email addresses to which the email will be sent.
+        - from_email (str, optional): The sender's email address. If not provided, a default will be used.
+        - fail_silently (bool, optional): A flag that determines whether to suppress exceptions if an error occurs during email sending. Default is True (suppress errors).
+        
+        Keyword Arguments (kwargs):
+        - files (list, optional): A list of `Attachment` objects that will be included with the email. The list is passed via `kwargs`.
+
+        Attributes:
+        - subject (str): The email subject.
+        - recipient_list (list): The list of recipients for the email.
+        - from_email (str): The sender's email address.
+        - fail_silently (bool): Whether to fail silently or raise errors when sending the email.
+        - message (str): The plain text body of the email.
+        - html_message (str): The HTML body of the email (same as `message` in this case).
+        - send_time (datetime, optional): The time at which the email should be sent. Defaults to None (send immediately).
+        """
         self.subject = subject
         self.recipient_list = recipient_list
         self.from_email = from_email
@@ -64,13 +87,40 @@ class BaseEmailProcessor:
             # Raise an exception for invalid send_time type
             raise InvalidSendTime(send_time)
 
+    def _process_files(self) -> List[Attachment]:
+        """
+        This method processes the 'files' parameter from kwargs, ensuring that all
+        files provided are instances of the Attachment class. It returns a list of valid 
+        Attachment objects after performing the check.
+
+        Input:
+        - No explicit input, uses the `files` keyword argument passed to the class.
+
+        Output:
+        - List of `Attachment` objects (valid files). If any of the files are not 
+        `Attachment` objects, an exception is raised.
+
+        Raises:
+        - InvalidFileFormat: If any item in the `files` list is not an instance of the 
+        `Attachment` class.
+        """
+        # Extract the "files" from kwargs, default to an empty list if not provided
+        attachments = self.kwargs.pop("files", []) or []
+
+        # Check that all items in attachments are instances of Attachment
+        for attachment in attachments:
+            if not isinstance(attachment, Attachment):
+                # Raise an error if the file is not an instance of the Attachment class
+                raise InvalidFileFormat("All files must be instances of the Attachment class")
+        
+        # Return the list of valid Attachment objects
+        return attachments
+
     def _process_email(self):
         connection = self.get_connection()
 
-        # pop files first, files is a list of file objects
-        attachment_files = self.kwargs.pop("files", []) or []
-
-        email_obj = self._save_email(attachments=attachment_files)
+        attachments = self._process_files()
+        email_obj = self._save_email()
         
         try:
             msg = EmailMultiAlternatives(
@@ -83,11 +133,11 @@ class BaseEmailProcessor:
             )
             msg.attach_alternative(self.html_message, "text/html")
             # attach the files.
-            for file in attachment_files:
+            for attachment in attachments:
                 msg.attach(
-                    filename=os.path.basename(file.name),
-                    content=file.read(),
-                    mimetype=filetype.guess_mime(file.read()),
+                    filename=attachment.file.name,
+                    content=attachment.file.read(),
+                    mimetype=filetype.guess_mime(attachment.file.read()),
                 )
             msg.send(self.fail_silently)
 
@@ -113,12 +163,8 @@ class BaseEmailProcessor:
     def get_default_from_email(self):
         return settings.DEFAULT_FROM_EMAIL
 
-    def _save_email(self, attachments):
-        # save the mail
-        attachment_objs = []
-        for file in attachments:
-            attachment_objs.append(Attachment.objects.create(file=file))
-        
+    def _save_email(self):
+        attachment_objs = self._process_files()
         email_obj = Email.objects.create(
             subject=self.subject,
             body=self.message,
