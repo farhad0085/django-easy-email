@@ -1,7 +1,7 @@
 import os
 from easy_email.enums import EmailStatus
 from easy_email.validators import TemplateNameValidator
-from easy_email import settings
+from easy_email.settings import settings
 from django.db import models
 
 
@@ -9,12 +9,15 @@ def upload_to(instance, filename):
     file_path = os.path.join(settings.EASY_EMAIL_ATTACHMENT_UPLOAD_PATH, filename)
     return file_path
 
+def storage_backend():
+    return settings.EASY_EMAIL_ATTACHMENT_STORAGE_BACKEND
+
 
 class Attachment(models.Model):
-    file = models.FileField(upload_to=upload_to, max_length=500, null=True)
+    file = models.FileField(upload_to=upload_to, max_length=500, null=True, storage=storage_backend)
 
     def __str__(self):
-        return self.file or f"File ID - {self.id}"
+        return self.file.name if self.file else f"File ID - {self.id}"
 
 
 class Email(models.Model):
