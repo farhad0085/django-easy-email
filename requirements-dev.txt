@@ -2,3 +2,4 @@ celery==5.2.2
 django==3.2
 filetype==1.2.0
 ipykernel==6.29.5
+gevent==24.2.1
