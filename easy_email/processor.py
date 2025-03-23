@@ -1,7 +1,7 @@
 import filetype
 import traceback
+from typing import Optional, Union, List
 from celery import shared_task
-from typing import List
 from django.utils import timezone
 from datetime import timedelta
 from django.conf import settings
@@ -9,7 +9,6 @@ from django.core.mail import EmailMultiAlternatives, get_connection
 from easy_email.enums import EmailStatus
 from easy_email.exceptions import InvalidEmailProcessor, InvalidFileFormat, InvalidSendTime
 from easy_email.models import Attachment, Email
-from typing import Optional, Union
 
 
 class BaseEmailProcessor:
@@ -63,7 +62,8 @@ class BaseEmailProcessor:
             
         If the datetime is in the past, the function will raise an error. If an integer is provided, it will be interpreted as a delay in seconds, and the email will be sent after that duration.
         """
-        self._process_email(send_time)
+        send_time = self.get_send_time(send_time)
+        self._send(send_time)
 
     def _process_files(self) -> List[Attachment]:
         """
@@ -94,7 +94,7 @@ class BaseEmailProcessor:
         # Return the list of valid Attachment objects
         return attachments
 
-    def _process_email(self, send_time):
+    def _send(self, send_time):
         connection = self.get_connection()
 
         attachments = self._process_files()
@@ -107,7 +107,7 @@ class BaseEmailProcessor:
                 from_email=self.from_email or self.get_default_from_email(),
                 to=self.recipient_list,
                 connection=connection,
-                **self.kwargs
+                cc=self.kwargs.get('cc'),
             )
             msg.attach_alternative(self.html_message, "text/html")
             # attach the files.
@@ -150,7 +150,7 @@ class BaseEmailProcessor:
             cc=self.kwargs.get('cc'),
         )
         
-        email_obj.send_time = self.get_send_time(send_time)
+        email_obj.send_time = send_time
         email_obj.attachments.set(attachment_objs)
         email_obj.save()
         return email_obj
@@ -166,7 +166,7 @@ class DefaultEmailProcessor(BaseEmailProcessor):
 
 
 class CeleryEmailProcessor(BaseEmailProcessor):
-
+    
     def get_send_time(self, raw_send_time=None):
         if not raw_send_time:
             raise InvalidEmailProcessor("If you don't want to schedule the email, \
