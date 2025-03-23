@@ -2,7 +2,8 @@ from django.views import View
 from django.http import JsonResponse
 from django.shortcuts import render
 from easy_email.models import Attachment
-from easy_email.processor import CeleryEmailProcessor, DefaultEmailProcessor
+from easy_email.processors.default import DefaultEmailProcessor
+from easy_email.processors.celery import CeleryEmailProcessor
 from easy_email.utils import render_email_template
 
 
