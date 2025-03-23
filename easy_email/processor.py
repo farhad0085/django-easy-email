@@ -9,6 +9,7 @@ from django.core.mail import EmailMultiAlternatives, get_connection
 from easy_email.enums import EmailStatus
 from easy_email.exceptions import InvalidEmailProcessor, InvalidFileFormat, InvalidSendTime
 from easy_email.models import Attachment, Email
+from easy_email.utils import schedule_email
 
 
 class BaseEmailProcessor:
@@ -160,8 +161,8 @@ class DefaultEmailProcessor(BaseEmailProcessor):
     
     def get_send_time(self, raw_send_time=None):
         if raw_send_time:
-            raise InvalidEmailProcessor("`DefaultEmailProcessor` doesn't support email scheduling, \
-                please use `CeleryEmailProcessor` instead.")
+            raise InvalidEmailProcessor("`DefaultEmailProcessor` doesn't support email scheduling, "
+                "please use `CeleryEmailProcessor` instead.")
         return timezone.now()
 
 
@@ -169,8 +170,8 @@ class CeleryEmailProcessor(BaseEmailProcessor):
     
     def get_send_time(self, raw_send_time=None):
         if not raw_send_time:
-            raise InvalidEmailProcessor("If you don't want to schedule the email, \
-                please use `DefaultEmailProcessor` instead.")
+            raise InvalidEmailProcessor("If you don't want to schedule the email, "
+                "please use `DefaultEmailProcessor` instead.")
         
         current_time = timezone.now()  # Get the current time with timezone info
         
@@ -191,3 +192,24 @@ class CeleryEmailProcessor(BaseEmailProcessor):
         else:
             # Raise an exception for invalid send_time type
             raise InvalidSendTime()
+
+    def send(self, send_time):
+        send_time = self.get_send_time(send_time)
+        email_obj = self._save_email(send_time)
+        email_obj.status = EmailStatus.PENDING
+        email_obj.save()
+        connection_data = self.get_connection_data()
+
+        # no way to call a class method using .apply_async() or .delay()
+        # so creating a function outside the class to handle the scheduling
+        schedule_email.apply_async((
+            self.subject,
+            self.message,
+            self.from_email or self.get_default_from_email(),
+            self.recipient_list,
+            self.kwargs.get('cc'),
+            self.fail_silently,
+            email_obj.id,
+            connection_data,
+            [att.id for att in self._process_files()]
+        ), eta=send_time)
