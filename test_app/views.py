@@ -1,9 +1,8 @@
 from django.views import View
 from django.http import JsonResponse
 from django.shortcuts import render
-from django.utils import timezone
 from easy_email.models import Attachment
-from easy_email.processor import DefaultEmailProcessor
+from easy_email.processor import CeleryEmailProcessor, DefaultEmailProcessor
 from easy_email.utils import render_email_template
 
 
@@ -33,13 +32,13 @@ class SendEmailAPIView(View):
             )
             email.send()
             return JsonResponse({'message': 'Email sent instantly!'})
-        
-        elif action == 'schedule':
-            # Logic to schedule the email
-            scheduled_time = request.POST.get('scheduled_time')
-            if scheduled_time:
-                scheduled_time = timezone.make_aware(scheduled_time)  # Convert to timezone-aware datetime
-                # TODO: Logic to schedule email
-                return JsonResponse({'message': f'Email scheduled for {scheduled_time}'})
-        
-        return JsonResponse({'error': 'Invalid action'}, status=400)
+        else:
+            # Logic to schedule email
+            email = CeleryEmailProcessor(
+                subject=subject,
+                email_body=body,
+                recipient_list=recipients,
+                files=files
+            )
+            email.send(send_time=50)
+            return JsonResponse({'message': 'Email scheduled successfully!'})
