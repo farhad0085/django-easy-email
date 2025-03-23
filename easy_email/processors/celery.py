@@ -1,6 +1,5 @@
 import filetype
 import traceback
-from celery import current_app
 from datetime import timedelta
 from django.utils import timezone
 from django.core.mail import EmailMultiAlternatives, get_connection
@@ -8,6 +7,12 @@ from easy_email.enums import EmailStatus
 from easy_email.exceptions import InvalidEmailProcessor, InvalidSendTime
 from easy_email.processors.base import BaseEmailProcessor
 from easy_email.models import Attachment, Email
+try:
+    from celery import current_app
+except ImportError as exc:
+    raise ImportError(
+            "To use CeleryEmailProcessor, you must've installed and setup celery!"
+        ) from exc
 
 
 @current_app.task

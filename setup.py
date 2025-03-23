@@ -33,7 +33,6 @@ setup(
     install_requires=[
         "django>=3.2",
         "filetype>=1.2.0",
-        "celery>=5.2.2"
     ],
 )
 
