@@ -28,6 +28,7 @@ setup(
         "easy_email/migrations",
         "easy_email/loaders",
         "easy_email/backends",
+        "easy_email/processors",
     ],
     include_package_data=True,
     install_requires=[

@@ -3,3 +3,6 @@ django==3.2
 filetype==1.2.0
 ipykernel==6.29.5
 gevent==24.2.1
+mkdocs==1.6.1
+mkdocstrings==0.26.1
+mkdocstrings-python==1.11.1
