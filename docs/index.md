@@ -9,7 +9,6 @@ A Django extension designed to streamline email management with powerful templat
 
 ## Documentation
 - [Installation](https://django-easy-email.readthedocs.io/en/latest/installation/)
-- [Configuration](https://django-easy-email.readthedocs.io/en/latest/configuration/)
 - [Usage](https://django-easy-email.readthedocs.io/en/latest/usage/)
 - [Settings](https://django-easy-email.readthedocs.io/en/latest/settings/)
 - [API Reference](https://django-easy-email.readthedocs.io/en/latest/api_reference/)

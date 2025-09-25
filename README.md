@@ -9,14 +9,13 @@ A Django extension designed to streamline email management with powerful templat
 
 ## Documentation
 - [Installation](https://django-easy-email.readthedocs.io/en/latest/installation/)
-- [Configuration](https://django-easy-email.readthedocs.io/en/latest/configuration/)
 - [Usage](https://django-easy-email.readthedocs.io/en/latest/usage/)
 - [Settings](https://django-easy-email.readthedocs.io/en/latest/settings/)
 - [API Reference](https://django-easy-email.readthedocs.io/en/latest/api_reference/)
 
 ## Important!
 ### Windows Users
-In windows, to run celery, you should use `gevent` along with celery otherwise celery tasks will not evaluate.
+In windows, to run celery, you should use `gevent` along with celery, otherwise celery tasks will not evaluate.
 
 - Use following command to install `gevent`
 ```sh
