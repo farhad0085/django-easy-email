@@ -1,3 +1,3 @@
 # Default Email Processor
 
-:: easy_email.processors.default
+::: easy_email.processors.default

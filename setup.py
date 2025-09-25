@@ -41,3 +41,5 @@ setup(
 # python setup.py sdist bdist_wheel
 # upload to pypi
 # twine upload dist/*
+
+# docs -> mkdocs serve --dev-addr=0.0.0.0:8080

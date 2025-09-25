@@ -1,3 +1,3 @@
 # Celery Email Processor
 
-:: easy_email.processors.celery
+::: easy_email.processors.celery

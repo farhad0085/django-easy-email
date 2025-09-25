@@ -15,6 +15,7 @@ nav:
   - API Reference:
       - API Reference: api_reference.md
       - Exception: api/exceptions.md
+      - Utility: api/utils.md
       - Email Processors:
           - Base: api/processors/base.md
           - Default: api/processors/default.md

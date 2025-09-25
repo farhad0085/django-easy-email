@@ -5,13 +5,13 @@ To integrate `django-easy-email` into your Django project, follow these simple s
 ## Send email immediately
 
 ```python
-from easy_email.utils import render_email_template
 from easy_email.processors.default import DefaultEmailProcessor
+from django.template.loader import render_to_string
 
 
 subject = "Test Email"
 context = {}
-body = render_email_template('path/to/email_template.html', context)
+body = render_to_string('path/to/email_template.html', context)
 recipients = ['email1@gmail.com', 'email2@yahoo.com']
 
 email = DefaultEmailProcessor(
@@ -29,13 +29,13 @@ To schedule an email, you have to use `CeleryEmailProcessor` from `easy_email.pr
 
 ```python
 from datetime import timedelta
-from easy_email.utils import render_email_template
+from django.template.loader import render_to_string
 from easy_email.processors.celery import CeleryEmailProcessor
 
 
 subject = "Test Email"
 context = {}
-body = render_email_template('path/to/email_template.html', context)
+body = render_to_string('path/to/email_template.html', context)
 recipients = ['email1@gmail.com', 'email2@yahoo.com']
 send_at = timedelta(minutes=10) # supports timedelta, or if int is provided, it'll be treated as seconds
 
@@ -52,14 +52,14 @@ email.send(send_at)
 In order to send files in the email, use `Attachment` model to upload the file first. For a clear understanding, follow the example:
 
 ```python
-from easy_email.utils import render_email_template
+from django.template.loader import render_to_string
 from easy_email.processors.default import DefaultEmailProcessor
 from easy_email.models import Attachment
 
 
 subject = "Test Email"
 context = {}
-body = render_email_template('path/to/email_template.html', context)
+body = render_to_string('path/to/email_template.html', context)
 recipients = ['email1@gmail.com', 'email2@yahoo.com']
 
 file = ... # some file
